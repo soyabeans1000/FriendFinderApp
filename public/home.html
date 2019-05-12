@@ -6,31 +6,45 @@
 
   <!-- Latest compiled and minified CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+  <link rel="stylesheet" href="../assets/styles/main.css">
 
 </head>
 <body>
 
   <div class="container">
 
-    <div class="jumbotron">
-      <h1 class="text-center"><span class="fa fa-fire"></span> Hot Restaurant</h1>
+    <div class="jumbotron friend-box">
+      <h1 class="text-center"><i class="fas fa-user-friends"></i> Friend Finder</h1>
       <hr>
-      <h2 class="text-center">We only have 5 tables! Book your seat before they all are gone!</h2>
+      <h2 class="text-center">Answer a few basic questions.
+        Then find the friend with the greatest compatibility!</h2>
+
+
+      
+
+
+
       <br>
 
+     
       <div class="text-center">
-        <a href="/tables"><button class="btn btn-lg btn-primary"><span class="fa fa-list-alt"></span> View Tables</button></a>
-        <a href="/reserve"><button class="btn btn-lg btn-danger"><span class="fa fa-credit-card"></span> Make Reservation</button></a>
+        <a href="/reserve"><button class="btn btn-lg btn-danger"><i class="fas fa-poll"></i> Take Survey</button></a>
+        <p><br><a href="/api/tables" class="api_link">Friends List API</a></p>
       </div>
+
+     
+
 
     </div>
 
-    <footer class="footer">
+    <!-- <footer class="footer">
       <div class="container">
-        <p><a href="/api/tables">API Table Link</a> | <a href="/api/waitlist">API Wait List</a>
+        
+      <div class="text-center">
+        <p><a href="/api/tables" class="api_link">Friends List API</a> </p>
       </div>
-    </footer>
+    </footer> -->
 
   </div>
 

@@ -1,0 +1,21 @@
+body{
+	height: 100vh;
+	background-image: url('../images/friends-bg.jpg');
+	background-position: center;
+	background-size: cover;
+	background-repeat: no-repeat;
+    background-color:black;
+}
+
+.friend-box
+{
+    margin-top: 20vh;
+    opacity: 0.9;
+}
+
+.api_link
+{
+    color: blue;
+     
+}
+
