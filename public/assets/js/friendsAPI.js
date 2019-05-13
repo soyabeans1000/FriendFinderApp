@@ -17,9 +17,10 @@ const getFriendsAPI = _ => {
       r.forEach(({ name, photo, scores }) => {
         let friendDiv = document.createElement('div')
         friendDiv.innerHTML = `
-          <h6>{\n\n${name}</h6>
-          <h6>${photo}</h6>
-          <h6>${scores}\n\n}</h6>`
+          {name:${name}<br>
+          photo:${photo}<br>
+          scores:[${scores}]}<br><br>`
+          friendDiv.className = 'json_obj'
        document.querySelector('#friendsList').append(friendDiv)
      })
     })
