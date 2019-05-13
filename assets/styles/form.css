@@ -1,0 +1,14 @@
+body{
+	height: 100vh;
+	background-image: url('../images/friends-bg.jpg');
+	background-position: center;
+	background-size: cover;
+	background-repeat: no-repeat;
+    background-color:black;
+}
+
+.friend-form
+{
+    margin-top: 5vh;
+    opacity: 0.9;
+}
