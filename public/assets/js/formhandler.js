@@ -2,50 +2,28 @@ const { fetch, alert } = window
 
 const numOfQuestions = 10
 
-// const getUsers = _ => {
-//   fetch('/users')
-//     .then(r => r.json())
-//     .then(users => {
-//       document.querySelector('#userView').innerHTML = ''
-//       users.forEach(({ id, name, email, password }) => {
-//         let userDiv = document.createElement('div')
-//         userDiv.innerHTML = `
-//           <h3>#${id} ${name}</h3>
-//           <h5>${email}</h5>
-//           <h6>${password}</h6>
-//           <button id="deleteUser" data-uid="${id}">delete user</button>
-//         `
-//         document.querySelector('#userView').append(userDiv)
-//       })
-//     })
-//     .catch(e => console.error(e))
-// }
 
 
 
-const getFriendsAPI = _ => {
+
+const getCompatibleUser = (x,y,z) => {
+
+
   fetch('/friendsAPI')
-    .then(r => r.json())
-    .then(users => {
-      document.querySelector('#userView').innerHTML = ''
-      users.forEach(({ id, name, email, password }) => {
-        let userDiv = document.createElement('div')
-        userDiv.innerHTML = `
-          <h3>#${id} ${name}</h3>
-          <h5>${email}</h5>
-          <h6>${password}</h6>
-          <button id="deleteUser" data-uid="${id}">delete user</button>
-        `
-        document.querySelector('#userView').append(userDiv)
-      })
-    })
-    .catch(e => console.error(e))
-}
+  .then(r => r.json())
+  .then(friends =>  {
+    document.querySelector('#friendsList').innerHTML = friends[0].name
 
+    let photoDiv = document.createElement('img')
 
-const getCompatibleUser = _ => {
+    photoDiv.src = friends[0].photo
+
+    document.querySelector('#friendsList').append(photoDiv)
+
+   console.log('friends list' + friends[0].name) 
+  })
   
-  document.querySelector('#friendsList').innerHTML = "Here is your list of friends"
+ 
 
 }
 
@@ -81,7 +59,7 @@ console.log(scores)
     .then(r => {
 
       console.log(r)
-      getCompatibleUser()
+      getCompatibleUser(document.querySelector('#name').value,document.querySelector('#photo').value,scores)
 
      
     })
