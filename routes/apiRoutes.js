@@ -3,7 +3,8 @@
 // Friends Array with friend objects
 // ===============================================================================
 
-const friendsArray = require('../friends/friends.js')
+const friendsArray = require('../data/friends.js')
+var path = require('path')
 
 // ===============================================================================
 // ROUTING
@@ -32,17 +33,61 @@ module.exports = function (app) {
   // Then the server saves the data to the tableData array)
   // ---------------------------------------------------------------------------
 
-  app.post('/api/tables', function (req, res) {
+  // app.post('/api/tables', function (req, res) {
+  //   // Note the code here. Our "server" will respond to requests and let users know if they have a table or not.
+  //   // It will do this by sending out the value "true" have a table
+  //   // req.body is available since we're using the body parsing middleware
+  //   if (tableData.length < 5) {
+  //     tableData.push(req.body)
+  //     res.json(true)
+  //   } else {
+  //     waitListData.push(req.body)
+  //     res.json(false)
+  //   }
+  // })
+  
+
+  app.post('/profile', function (req, res) {
     // Note the code here. Our "server" will respond to requests and let users know if they have a table or not.
     // It will do this by sending out the value "true" have a table
     // req.body is available since we're using the body parsing middleware
-    if (tableData.length < 5) {
-      tableData.push(req.body)
-      res.json(true)
-    } else {
-      waitListData.push(req.body)
-      res.json(false)
-    }
+    // if (tableData.length < 5) {
+    //   tableData.push(req.body)
+    //   res.json(true)
+    // } else {
+    //   waitListData.push(req.body)
+    //   res.json(false)
+    // }
+
+    // friendsArray.push(req.body)
+    res.json(friendsArray)
+    // res.json(true)
+
+    console.log('I am inside prodifle')
+   
+
+
+  })
+
+
+  app.get('/profile', function (req, res) {
+    // Note the code here. Our "server" will respond to requests and let users know if they have a table or not.
+    // It will do this by sending out the value "true" have a table
+    // req.body is available since we're using the body parsing middleware
+    // if (tableData.length < 5) {
+    //   tableData.push(req.body)
+    //   res.json(true)
+    // } else {
+    //   waitListData.push(req.body)
+    //   res.json(false)
+    // }
+
+    // friendsArray.push(req.body)
+    // res.json(true)
+
+    console.log('I am inside prodifle')
+
+
   })
 
   // ---------------------------------------------------------------------------

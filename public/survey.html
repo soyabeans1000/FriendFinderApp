@@ -2,12 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Tables Page</title>
+  <title>Friends Survey</title>
 
   <!-- Latest compiled and minified CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
-  <link rel="stylesheet" href="../assets/styles/form.css">
+  <link rel="stylesheet" href="assets/styles/form.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
 </head>
 <body>
@@ -15,12 +18,12 @@
   <div class="container">
     <div class="jumbotron friend-form">
      <h1 class="text-center">
-      <i class="fas fa-user-friends"></i> Survey Questions
+      <i class="fas fa-user-friends"></i>Survey Questions
     </div>
-    <div class="row">
+    <div class="row form-container">
       <div class="col-lg-12">
         <div class="card">
-          <div class="card-header bg-info text-white">
+          <div class="card-header bg-dark text-white">
            Tell Us About Yourself
           </div>
           <div class="card-body">
@@ -32,9 +35,10 @@
               <div class="form_header">Link to Photo Image (Required)</div>
               <input type="form_text" id="photo" required>
           
+              <br><br>
             
           
-              <div class="form_header">Question 1:<br>
+              <div class="form_header"><span class="q">Question 1:</span><br>
               Your mind is always buzzing with unexplored ideas and plans.</div>
               <select id="q1" class="form_text">
                
@@ -45,8 +49,8 @@
                 <option value="5">5 (Strongly Agree)</option>
               </select> <br><br>
 
-              <div class="form_header">Question 2:<br>
-                Your mind is always buzzing with unexplored ideas and plans.</div>
+              <div class="form_header"><span class="q">Question 2:</span><br>
+                Generally speaking, you rely more on your experience than your imagination.</div>
                 <select id="q2" class="form_text">
                  
                   <option value="1">1 (Strongly Disagree)</option>
@@ -56,8 +60,8 @@
                   <option value="5">5 (Strongly Agree)</option>
                 </select> <br><br>
 
-                <div class="form_header">Question 3:<br>
-                  Your mind is always buzzing with unexplored ideas and plans.</div>
+                <div class="form_header"><span class="q">Question 3:</span><br>
+                  You find it easy to stay relaxed and focused even when there is some pressure.</div>
                   <select id="q3" class="form_text">
                    
                     <option value="1">1 (Strongly Disagree)</option>
@@ -66,8 +70,8 @@
                     <option value="4">4</option>
                     <option value="5">5 (Strongly Agree)</option>
                   </select> <br><br>
-                  <div class="form_header">Question 4:<br>
-                    Your mind is always buzzing with unexplored ideas and plans.</div>
+                  <div class="form_header"><span class="q">Question 4:</span><br>
+                    You rarely do something just out of sheer curiosity.</div>
                     <select id="q4" class="form_text">
                      
                       <option value="1">1 (Strongly Disagree)</option>
@@ -78,8 +82,8 @@
                     </select> <br><br>
 
                  
-                    <div class="form_header">Question 5:<br>
-                      Your mind is always buzzing with unexplored ideas and plans.</div>
+                    <div class="form_header"><span class="q">Question 5:</span><br>
+                      People can rarely upset you.</div>
                       <select id="q5" class="form_text">
                        
                         <option value="1">1 (Strongly Disagree)</option>
@@ -89,8 +93,8 @@
                         <option value="5">5 (Strongly Agree)</option>
                       </select> <br><br>
 
-                      <div class="form_header">Question 6:<br>
-                        Your mind is always buzzing with unexplored ideas and plans.</div>
+                      <div class="form_header"><span class="q">Question 6:</span><br>
+                        It is often difficult for you to relate to other people’s feelings.</div>
                         <select id="q6" class="form_text">
                          
                           <option value="1">1 (Strongly Disagree)</option>
@@ -100,8 +104,8 @@
                           <option value="5">5 (Strongly Agree)</option>
                         </select> <br><br>
 
-                        <div class="form_header">Question 7:<br>
-                          Your mind is always buzzing with unexplored ideas and plans.</div>
+                        <div class="form_header"><span class="q">Question 7:</span><br>
+                          In a discussion, truth should be more important than people’s sensitivities.</div>
                           <select id="q7" class="form_text">
                            
                             <option value="1">1 (Strongly Disagree)</option>
@@ -111,8 +115,8 @@
                             <option value="5">5 (Strongly Agree)</option>
                           </select> <br><br>
 
-                          <div class="form_header">Question 8:<br>
-                            Your mind is always buzzing with unexplored ideas and plans.</div>
+                          <div class="form_header"><span class="q">Question 8:</span><br>
+                            You rarely get carried away by fantasies and ideas.</div>
                             <select id="q8" class="form_text">
                              
                               <option value="1">1 (Strongly Disagree)</option>
@@ -123,8 +127,8 @@
                             </select> <br><br>
 
 
-                            <div class="form_header">Question 9:<br>
-                              Your mind is always buzzing with unexplored ideas and plans.</div>
+                            <div class="form_header"><span class="q">Question 9:</span><br>
+                              You think that everyone’s views should be respected regardless of whether they are supported by facts or not.</div>
                               <select id="q9" class="form_text">
                                
                                 <option value="1">1 (Strongly Disagree)</option>
@@ -134,8 +138,8 @@
                                 <option value="5">5 (Strongly Agree)</option>
                               </select> <br><br>
 
-                              <div class="form_header">Question 10:<br>
-                                Your mind is always buzzing with unexplored ideas and plans.</div>
+                              <div class="form_header"><span class="q">Question 10:</span><br>
+                                You feel more energetic after spending time with a group of people.</div>
                                 <select id="q10" class="form_text">
                                  
                                   <option value="1">1 (Strongly Disagree)</option>
@@ -145,20 +149,40 @@
                                   <option value="5">5 (Strongly Agree)</option>
                                 </select> <br><br>
 
-
-
-
-
-
-              <button type="submit" class="btn btn-primary submit">Submit</button>
+              <button type="submit" class="btn btn-secondary submit" id="submitBtn" data-toggle="modal" data-target="#myModal">Submit</button>
             </form>
           </div>
         </div>
       </div>
     </div>
 
-   
 
+ <!-- The Modal -->
+ <div class="modal fade" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+    
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title">Modal Heading</h4>
+        <button type="button" class="close" data-dismiss="modal">×</button>
+      </div>
+      
+      <!-- Modal body -->
+      <div class="modal-body">
+        Modal body..
+      </div>
+      
+      <!-- Modal footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
+      
+    </div>
+  </div>
+</div>
+   
+    <script src="assets/js/formhandler.js"></script>
 
 </body>
 </html>
