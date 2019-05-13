@@ -5,10 +5,27 @@ body{
 	background-size: cover;
 	background-repeat: no-repeat;
     background-color:black;
+    font-size:1em;
+    font-family: Verdana, Tahoma, sans-serif;
 }
 
 .friend-form
 {
     margin-top: 5vh;
     opacity: 0.9;
+}
+
+.form_text
+{
+
+    font-size:0.8em;
+    font-weight:normal;
+}
+
+.form_header
+{
+    font-size:0.9em;
+    color:teal;
+    font-weight:300;
+
 }
