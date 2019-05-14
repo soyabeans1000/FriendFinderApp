@@ -1,0 +1,1058 @@
+/* Javascript for keywordprocessor/main/index */
+function HeightCalcView(HeightCalcViewCallback) {
+
+    var scTemplate = $(window).innerHeight() - 410;
+    var panelH = $('.keyword-source').find('.panel-heading').height();
+    var panelInner = scTemplate - panelH - 250 - 10;
+
+    if (panelInner < 290) panelInner = 290;
+
+    $('.keyword-source textarea').css('height', (panelInner - 30) + 'px');
+    $('.keyword-source textarea').css('max-height', (panelInner - 30) + 'px');
+    $('.keyword-source textarea').css('min-height', (panelInner - 30) + 'px');
+
+    setTimeout(function () {
+        $('.keyword-results .panel-body').css('height', $('.keyword-source .panel-body').innerHeight() + 3 + 'px');
+        $('.keyword-results textarea').css('height', $('.keyword-source .panel-body').innerHeight() - 45 + 'px');
+        typeof HeightCalcViewCallback === 'function' && HeightCalcViewCallback()
+    }, 0)
+}
+
+$(window).on('resize', function (e) {
+    HeightCalcView(function () {
+        $('[aria-describedby^="tooltip"]').tooltip('show')
+    })
+})
+
+$(document).on('ready', function(e) {
+    var text = $('.initial-keywords-field').val()
+    $('.initial-keywords-field').val(text)
+
+    if (parseInt($('.option-result-separator :checked:first').val()) == 0) {
+        $('input.option-remove-single-words').iCheck('enable');
+    }
+})
+
+HeightCalcView()
+
+var autoSaveTimeOut = 5000;
+var autoSaveData = '';
+var timeId = null;
+var autoSaveHistoryId = '';
+
+function checkForAutoSave(){
+    var currentAutoSaveData = exportAsJson();
+
+    if(autoSaveData !== currentAutoSaveData) {
+        clearTimeout(timeId);
+
+        return;
+    }
+
+    autosave();
+}
+
+function autosave() {
+    var autoSaveUrl = '/frankenstein/save'
+
+    if(autoSaveHistoryId){
+        autoSaveUrl += '?id=' + autoSaveHistoryId;
+    }
+
+    $.ajax({
+        url: autoSaveUrl,
+        dataFormat: 'json',
+        method: 'POST',
+        data: {
+            id: autoSaveHistoryId,
+            data: exportAsJson()
+        },
+        success: function (data) {
+            autoSaveHistoryId = data.id;
+            // console.log('autosave complete')
+            // console.log(data)
+        }
+    });
+}
+
+$(document).on('click', '.keyword-proccess', function () {
+
+    $(this).button('loading');
+    $('.initial-keywords-field').val().trim();
+
+    var val = $('.initial-keywords-field').val().trim();
+
+    if (val=="") {
+        sweetAlert("Attention!", "Please enter at least one initial keyword!", "warning");
+        $('.initial-keywords-field').val(val);
+
+        $(this).button('reset');
+
+        return;
+    }
+
+    process();
+});
+
+$(document).on('ifChanged', '.keyword-source input', function(event){
+    process();
+});
+
+$(document).on('ifChecked', 'input.option-remove-words', function (event) {
+    $('input.option-remove-words').removeClass('locked');
+});
+
+$(document).on('ifUnchecked', 'input.option-remove-words', function (event) {
+    $('input.option-remove-words').addClass('locked');
+});
+
+$(document).on('ifChecked', 'input.option-word-frequency-count', function (event) {
+    setTimeout(function () {
+        if ($('.option-result-separator :checked:first').val() != 0) {
+
+            setTimeout(function(){
+                $('.option-result-separator input[value="0"]').iCheck('check');
+            }, 15);
+        }
+
+        freqCountContainerShow();
+
+    }, 1);
+});
+
+$(document).on('ifUnchecked', 'input.option-word-frequency-count', function (event) {
+    freqCountContainerHide();
+    $('.freq-count-container').hide();
+});
+
+function freqCountContainerShow() {
+    var parentDiv = $('.processor-result').closest('div');
+
+    if (parentDiv.hasClass('col-md-12')) {
+        parentDiv.addClass('col-md-11');
+        parentDiv.removeClass('col-md-12');
+    }
+
+    $('.freq-count-container').show();
+}
+
+function freqCountContainerHide() {
+    var parentDiv = $('.processor-result').closest('div');
+
+    $('.freq-count-container').hide();
+
+    if (parentDiv.hasClass('col-md-11')) {
+        parentDiv.addClass('col-md-12');
+        parentDiv.removeClass('col-md-11');
+    }
+}
+
+$(document).on('ifChanged', '.option-result-separator', function (event) {
+
+    setTimeout(function(){
+        var optResultSeparator = $('.option-result-separator :checked:first').val();
+
+        console.log('event.optResultSep.changed: ' + optResultSeparator);
+
+        if (parseInt(optResultSeparator) != 0) {
+
+            if ($('.option-remove-phrases').is(':checked')) {
+                setTimeout(function () {
+                    $('input.option-remove-phrases').iCheck('uncheck');
+                }, 100);
+            }
+
+            if ($('.option-word-frequency-count').is(':checked')) {
+                setTimeout(function () {
+                    $('input.option-word-frequency-count').iCheck('uncheck');
+                }, 100);
+            }
+        }
+
+        if (parseInt(optResultSeparator) == 0) {
+
+            setTimeout(function(){
+                $('input.option-remove-single-words').iCheck('enable');
+                $('input.option-remove-single-words').iCheck('checked');
+            }, 50);
+        } else {
+
+            setTimeout(function(){
+                $('input.option-remove-single-words').iCheck('disable');
+            }, 50);
+        }
+    }, 50);
+
+});
+
+$(document).on('ifChecked', 'input.option-remove-phrases', function (event) {
+
+    if (parseInt($('.option-result-separator :checked:first').val()) == 0) {
+        $('input.remove-phrases-word').removeClass('locked');
+    } else {
+
+        setTimeout(function () {
+            $('input.option-remove-phrases').iCheck('uncheck');
+        }, 1);
+
+        swal("", "This option works only if 'One word/phrase per line' is selected", "warning");
+    }
+});
+
+$(document).on('ifUnchecked', 'input.option-remove-phrases', function (event) {
+    $('input.remove-phrases-word').addClass('locked');
+});
+
+$(document).on('click', '.save-in-history', function () {
+    swal({
+        title: "Save result",
+        text: "",
+        type: "input",
+        showCancelButton: true,
+        closeOnConfirm: false,
+        animation: "slide-from-top",
+        inputPlaceholder: "Record title"
+    }, function (inputValue) {
+
+        if (inputValue) {
+            inputValue = inputValue.trim();
+        }
+
+        if (inputValue === false) return false; // cancel button
+
+        var autoSaveUrl = '/frankenstein/save';
+
+        if (!inputValue) {
+            swal.showInputError("Title is required !");
+            $('.sweet-alert .sa-input-error').removeClass('show');
+
+            return false;
+        } else {
+            $.ajax({
+                url: autoSaveUrl,
+                dataFormat: 'json',
+                method: 'POST',
+                data: {data: exportAsJson(),title:inputValue},
+                success: function (data) {
+                    $.pjax.reload('#pjax');
+                    swal.close();
+                }
+            });
+        }
+    });
+});
+
+$(document).on('keyup', 'textarea.initial-keywords-field, textarea.processor-result', runCheck);
+
+$(document).on('ifChanged', 'input.option-maintain-phrases,'
+    + 'input.option-remove-non-word-chars,'
+    + 'input.option-protect-numbers,'
+    + 'input.option-remove-common-words,'
+    + 'input.option-remove-single-words,'
+    + 'input.option-convert-lower-case,'
+    + 'input.option-remove-single-letters,'
+    + 'input.option-remove-duplicates,'
+    + 'input[type="radio"][name="order-type"],'
+    + 'input[type="text"].option-remove-words,'
+    + 'input[type="text"].remove-phrases-word,'
+    + 'input.option-result-separator,'
+    + 'input.option-remove-words,'
+    + 'input.option-remove-phrases,'
+    + 'input.option-protected-characters,'
+    + 'input.option-append-word,'
+    + 'input.option-append-to-start,'
+    + 'input.option-append-word-value,'
+    + 'input.i-checks,'
+    + 'input.option-word-frequency-count',
+
+    runCheck
+);
+
+$(document).on('ifChanged', 'input.option-maintain-phrases', function(){
+
+    setTimeout(function(){
+        if ($('input.option-maintain-phrases').is(':checked')) {
+            $('input.option-remove-single-words').iCheck('check');
+        } else {
+            $('input.option-remove-single-words').iCheck('uncheck');
+        }
+    }, 1);
+});
+
+function runCheck(){
+    // console.log('check auto save data');
+    clearTimeout(timeId);
+    autoSaveData = exportAsJson();
+    timeId = setTimeout(checkForAutoSave, autoSaveTimeOut);
+}
+
+function exportAsJson() {
+    var result = {}
+    result.initialKeywordsText = $('.initial-keywords-field').val()
+    result.maintainPhrases = $('.option-maintain-phrases').is(':checked')
+    result.removeSpecialChars = $('.option-remove-non-word-chars').is(':checked')
+    result.protectNumbers = $('.option-protect-numbers').is(':checked')
+    result.removeCommonWords = $('.option-remove-common-words').is(':checked')
+    result.removeSingleWords = $('.option-remove-single-words').is(':checked')
+    result.convertLowerCase = $('.option-convert-lower-case').is(':checked')
+    result.removeSingleLetters = $('.option-remove-single-letters').is(':checked')
+    result.removeDuplicates = $('.option-remove-duplicates').is(':checked')
+    result.orderType = $('input[type="radio"][name="order-type"]:checked').val()
+    result.outputSeparator = $('.option-result-separator :checked:first').val()
+    result.removeWords = $('.option-remove-words').is(':checked')
+    result.removeWordsText = $('input[type="text"].option-remove-words').val().toLowerCase()
+    result.removePhrases = $('.option-remove-phrases').is(':checked');
+    result.removePhrasesText = $('input[type="text"].remove-phrases-word').val().toLowerCase()
+    result.protectedCharasters = $('.option-protected-characters').val().trim()
+    result.appendWord = $('.option-append-word').is(':checked')
+    result.appendToStart = $('.option-append-to-start').is(':checked')
+    result.appendValue = $('.option-append-word-value').val().trim()
+    result.wordFrequencyCount = $('.option-word-frequency-count').is(':checked')
+
+    return JSON.stringify(result)
+}
+
+function restoreFromJson(result) {
+    $('.initial-keywords-field').val(result.initialKeywordsText)
+    $('input[type="text"].option-remove-words').val(result.removeWordsText)
+    $('input[type="text"].remove-phrases-word').val(result.removePhrasesText)
+    $('.option-protected-characters').val(result.protectedCharasters)
+    $('.option-result-separator input[value=' + result.outputSeparator + ']').iCheck('check')
+    $('.option-maintain-phrases').iCheck(result.maintainPhrases ? 'check' : 'uncheck')
+    $('.option-remove-non-word-chars').iCheck(result.removeSpecialChars ? 'check' : 'uncheck')
+    $('.option-protect-numbers').iCheck(result.protectNumbers ? 'check' : 'uncheck')
+    $('.option-remove-common-words').iCheck(result.removeCommonWords ? 'check' : 'uncheck')
+    $('.option-remove-single-words').iCheck(result.removeSingleWords ? 'check' : 'uncheck')
+    $('.option-convert-lower-case').iCheck(result.convertLowerCase ? 'check' : 'uncheck')
+    $('.option-remove-single-letters').iCheck(result.removeSingleLetters ? 'check' : 'uncheck')
+    $('.option-remove-duplicates').iCheck(result.removeDuplicates ? 'check' : 'uncheck')
+    $('.option-remove-words').iCheck(result.removeWords ? 'check' : 'uncheck')
+    $('.option-remove-phrases').iCheck(result.removePhrases ? 'check' : 'uncheck')
+    $('.option-append-word').iCheck(result.appendWord ? 'check' : 'uncheck' )
+    $('.option-append-to-start').iCheck(result.appendToStart ? 'check' : 'uncheck' )
+    $('.option-append-word-value').val(result.appendValue)
+    $('.option-word-frequency-count').iCheck(result.wordFrequencyCount ? 'check' : 'uncheck' )
+}
+
+$(document).on('click', '.option-restore-json', function (event) {
+
+    event.preventDefault();
+
+    console.log($(this));
+
+    var structJson = $(this).parent().find('div.restore-json-content').text();
+
+    try {
+        var result = JSON.parse(structJson) // check for valid json
+    } catch (e) {
+        sweetAlert("Import error", "Wrong JSON format", "error");
+
+        return false
+    }
+
+    restoreFromJson(result);
+    process();
+
+    $('#magnet-history-modal').modal('hide')
+})
+
+function process() {
+
+    $('.initial-keywords-field').val().trim();
+
+    var val = $('.initial-keywords-field').val().trim();
+
+    if (val=="") {
+        sweetAlert("Attention!", "Please enter at least one initial keyword!", "warning");
+        $('.initial-keywords-field').val(val);
+
+        return;
+    }
+
+    var processButton = $('.keyword-proccess');
+    processButton.prop('disabled', true);
+
+    dataLayer.push({
+        'toolName': 'frankenstein',
+        'event': 'event_launch_tool'
+    });
+
+    var maintainPhrases = $('.option-maintain-phrases').is(':checked')
+    var removeSpecialChars = $('.option-remove-non-word-chars').is(':checked')
+    var protectNumbers = $('.option-protect-numbers').is(':checked')
+    var removeCommonWords = $('.option-remove-common-words').is(':checked')
+    var removeSingleWords = $('.option-remove-single-words').is(':checked')
+    var convertLowerCase = $('.option-convert-lower-case').is(':checked')
+    var removeSingleLetters = $('.option-remove-single-letters').is(':checked')
+    var appendWords = $('.option-append-word').is(':checked')
+    var replaceWords = $('.option-replace-words').is(':checked')
+    var wordFrequencyCount = $('.option-word-frequency-count').is(':checked')
+
+    var numberRegex = '';
+    if (protectNumbers) {
+        numberRegex = '0-9'
+    }
+
+    var initialKeywordsText = $('.initial-keywords-field').val();
+
+    if (convertLowerCase) {
+        initialKeywordsText = initialKeywordsText.toLowerCase()
+    }
+
+    if (removeCommonWords) {
+        // Asynchronous request
+        $.ajax({
+            url: "/frankenstein/filter-text",
+            type: "POST",
+            data: {text: initialKeywordsText},
+            async: false,
+            dataType: "json",
+            success: function (data) {
+                if (data.status == 'success') {
+                    initialKeywordsText = data.text;
+                }
+            }
+        });
+    }
+
+    if (replaceWords) {
+        var findWord = $('.option-replace-words-find').val().trim();
+        var withWord = $('.option-replace-words-with').val().trim();
+
+        if (convertLowerCase) {
+            findWord = findWord.toLowerCase();
+            withWord = withWord.toLowerCase();
+        }
+
+        if (findWord) {
+
+            findWord = '(\n| |)(' + findWord + ')(\n| |)';
+            var regExp = new RegExp(findWord, 'g');
+            withWord = '$1' + withWord + '$3';
+            initialKeywordsText = initialKeywordsText.replace(regExp, withWord);
+
+            regExp = RegExp('  ', 'g');
+            initialKeywordsText = initialKeywordsText.replace(regExp, ' ');
+        }
+    }
+
+    if (removeSpecialChars) {
+        var protectCharList = $('.option-protected-characters')
+            .val()
+            .trim()
+            .replace(/\s/g, '')
+            .replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+        var protectedCharsRegExp = "[^\\p{L}\\s,;\\n"
+            + numberRegex
+            + protectCharList
+            + ']';
+
+        protectedCharsRegExp = new RegExp(protectedCharsRegExp, 'gu');
+
+        if($('.option-protected-characters').val().trim().indexOf('-') === -1){
+            initialKeywordsText = initialKeywordsText.replace('-', ' ').trim();
+        }
+
+        initialKeywordsText = initialKeywordsText.replace(protectedCharsRegExp, '').trim();
+    }
+
+    var separator;
+    if (maintainPhrases) {
+        separator = /,|;|\n/g.test(initialKeywordsText) ? /,|;|\n/g : /\s/
+    } else {
+        separator = /,|;|\n/g.test(initialKeywordsText) ? /,|;|\n|\s/g : /\s/
+    }
+
+    var initialKeywords = initialKeywordsText
+        .split(separator)
+        .map(function (cv) {
+            return cv.trim()
+        });
+
+    var initialKeywordsRepeats = calculateRepeats(initialKeywords)
+
+    if ($('.option-remove-duplicates').is(':checked') == true) {
+        initialKeywords = removeDuplicates(initialKeywords)
+        initialKeywords = removeEmptyValues(initialKeywords)
+    }
+
+    var output_separator = '';
+    switch (parseInt($('.option-result-separator :checked:first').val())) {
+        case 0: output_separator = "\n"; break;
+        case 1: output_separator = ","; break;
+        case 2: output_separator = ", "; break;
+        case 3: output_separator = " "; break;
+    }
+
+    var result = initialKeywords;
+    var sortType = $('input[type="radio"][name="order-type"]:checked').val();
+
+    switch (sortType) {
+        case 'a-z': result = orderByAZ(initialKeywords); break;
+        case 'z-a': result = orderByZA(initialKeywords); break;
+        case 'length': result = orderByLength(initialKeywords, 1); break;
+        case 'lengthDesc': result = orderByLength(initialKeywords, -1); break;
+        case 'frequency': result = orderByFrequency(initialKeywords, initialKeywordsRepeats, 1); break;
+        case 'frequencyDesc': result = orderByFrequency(initialKeywords, initialKeywordsRepeats, -1); break;
+        default:;
+    }
+
+    if ($('.option-remove-words').is(':checked')) {
+
+        var wordsToRemove = $('input[type="text"].option-remove-words').val()
+            .toLowerCase()
+            .split(/,\s*/);
+
+        wordsToRemove = removeEmptyValues(wordsToRemove);
+        if (wordsToRemove.length) {
+
+            result.forEach(function (element, idx) {
+                
+                wordsToRemove.forEach(function (startFrom) {
+                    /**
+                     * startFrom = lo
+                     * @pattern: \blo(?:\w+|\d+)\b
+                     * @string: long any text lord some
+                     * @expect: `long` and `lord` should be deleted
+                     * @link: https://regex101.com/r/1gWoi5/1
+                     */
+                    var pattern = '\\b' + startFrom + '(?:\\w+|\\d+|)\\b';
+                    var regExp = new RegExp(pattern, 'gmi');
+                    result[idx] = result[idx].replace(regExp, '').replace(/\s+/, ' ').trim();
+                });
+            });
+
+            result = removeEmptyValues(result);
+        }
+    }
+
+    if ($('.option-remove-phrases').is(':checked')) {
+        var word = $('input[type="text"].remove-phrases-word').val().toLowerCase();
+        if (word) {
+            result = result.filter(function (element) {
+                if (new RegExp(word, 'gim').test(element)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            });
+        }
+    }
+
+    if (removeSingleLetters) {
+        result = result.filter(function (element) {
+            var filterFlag = true;
+            if (element.length <= 1) {
+                filterFlag = false;
+            }
+            return filterFlag
+        })
+    }
+
+    if(appendWords) {
+        var appendWordsType = $('.option-append-to-start').is(':checked') ? 'start' : 'end';
+        var appendWordsValue = $('.option-append-word-value').val().trim();
+
+        if(appendWordsValue) {
+            result = result.map(function (oldValue) {
+                var newValue = '';
+                if(appendWordsType == 'start') {
+                    newValue = appendWordsValue + ' ' + oldValue;
+                } else {
+                    newValue = oldValue + ' ' + appendWordsValue;
+                }
+
+                return newValue;
+            });
+        }
+    }
+
+    var removeSingleWordsEnable = $('input.option-remove-single-words').is(':enabled');
+    if (removeSingleWordsEnable && removeSingleWords && output_separator == '\n' && maintainPhrases) {
+        result = result.filter(function(word){
+            word = word.trim();
+            if (/\s/g.test(word)){
+                return word;
+            }
+        });
+    }
+
+    result = result.filter(Boolean);
+
+    $('.action-result-copy').attr("data-clipboard-text",result.join(output_separator));
+
+    if (wordFrequencyCount) {
+        $('.processor-result-numbers').text('');
+        $.each(result,function(index,value){
+            let freqNum = initialKeywordsRepeats[value];
+
+            $('.processor-result-numbers').append(freqNum + '<br>');
+        });
+    }
+
+
+    $('.processor-result').val(result.join(output_separator));
+
+    processButton.prop('disabled', false);
+    processButton.button('reset');
+}
+
+function orderByAZ(input) {
+
+    var result = input.slice()
+    result.sort(function (a, b) {
+        return a.localeCompare(b);
+    });
+
+    return result
+}
+
+function orderByZA(input) {
+    var result = input.slice()
+    result.sort(function (a, b) {
+        return -1 * a.localeCompare(b);
+    });
+
+    return result
+}
+
+$('label.order-type').click(function (event) {
+
+    var $container = $(event.currentTarget);
+
+    if ($container.find('span.glyphicon.text-muted').length
+        && ($muted = $container.find('span.glyphicon.text-muted').first())
+    ){
+        $container.find('span.glyphicon').removeClass('text-success').addClass('text-muted');
+        $muted.removeClass('text-muted').addClass('text-success')
+    } else {
+        $container.parent().find('span.glyphicon').removeClass('text-success text-muted')
+        $container.find('span.glyphicon').first().addClass('text-success');
+        $container.find('span.glyphicon').last().addClass('text-muted');
+    }
+
+    var $input = $container.find('input[data-init-val]')
+    if ($input) {
+        $input.val($input.attr('data-init-val'))
+        $input.attr('data-init-val', $input.attr('data-second-val'))
+            .attr('data-second-val', $input.val());
+    }
+
+    $('.keyword-proccess').button('loading');
+
+    setTimeout(process, 0);
+});
+
+function orderByLength(input, order) {
+    var result = input.slice();
+    result.sort(function (a, b) {
+        if (a.length > b.length) {
+            return 1 * order;
+        }
+        if (a.length < b.length) {
+            return -1 * order;
+        }
+
+        return 0;
+    });
+
+    return result;
+}
+
+function orderByFrequency(input, repeats, order) {
+    var result = input.slice();
+    result.sort(function (a, b) {
+        if (repeats[a] > repeats[b]) {
+            return -1 * order;
+        }
+        if (repeats[a] < repeats[b]) {
+            return 1 * order;
+        }
+        return 0;
+    });
+
+    return result;
+}
+
+$(document).on('click', '.action-result-save', saveResult);
+
+function saveResult() {
+    var text = $('.processor-result').val();
+    var filename = 'keywords';
+    var blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+
+    saveAs(blob, filename + ".txt");
+
+    $('.action-result-save').tooltip('show');
+
+    setTimeout(function () {
+        $('.action-result-save').tooltip('hide');
+    }, 1000);
+}
+
+$('.action-result-copy').tooltip({
+    placement: 'bottom',
+    trigger: 'manual',
+    title: 'Copied!'
+});
+
+$('.action-result-save').tooltip({
+    placement: 'bottom',
+    trigger: 'manual',
+    title: 'Saved!',
+});
+
+var clipboard = new Clipboard('.action-result-copy');
+
+clipboard.on('success', function (e) {
+    $(e.trigger).tooltip('show')
+
+    setTimeout(function(){
+        $(e.trigger).tooltip('hide');
+    }, 1000);
+
+    e.clearSelection();
+});
+
+$(document).on('click', '.action-scribbles', function (e) {
+
+    var $this = $(this);
+
+    e.preventDefault();
+
+    if (!$('.processor-result').val().match(/[a-zA-Z]/)){
+        swal({
+            title: "Warning",
+            text: "Result text area is blank, please fill it.",
+            type: "warning",
+            confirmButtonColor: "#62cb31",
+            confirmButtonText: "Ok",
+            closeOnConfirm: true
+        });
+
+        return false;
+    }
+
+    $.post($this.attr('data-store-url'), {
+        result: $(".action-result-copy").attr("data-clipboard-text")
+    }, function (response) {
+        window.location.href = $this.attr('data-href');
+    });
+
+    return false;
+});
+
+$(function(){
+    if(
+        (!($('.action-result-copy').attr("data-clipboard-text")))
+        && ($('.initial-keywords-field').val())
+        && ($('.processor-result').val())
+    ){
+        process();
+    }
+});
+
+$(document).on('click', '.action-reset', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    $('.initial-keywords-field, .processor-result, .option-remove-words, .remove-phrases-word, .option-append-word-value, .option-replace-words-find, .option-replace-words-with').val('').change();
+    $('.option-protected-characters').val('-\'').change();
+    $('.option-remove-duplicates').iCheck('check');
+    $('.option-remove-non-word-chars').iCheck('check');
+    $('.option-result-separator input[value="3"]').iCheck('check');
+    $('.option-maintain-phrases').iCheck('uncheck');
+    $('.option-protect-numbers').iCheck('uncheck');
+    $('.option-remove-common-words').iCheck('uncheck');
+    $('.option-remove-single-words').iCheck('uncheck');
+    $('.option-convert-lower-case').iCheck('check');
+    $('.option-remove-single-letters').iCheck('uncheck');
+    $('.option-remove-words').iCheck('uncheck');
+    $('.option-word-frequency-count').iCheck('uncheck');
+    $('.option-remove-phrases').iCheck('uncheck');
+    $('.option-append-word').iCheck('uncheck' );
+    $('.option-append-to-start').iCheck('uncheck' );
+    $('.option-replace-words').iCheck('uncheck');
+
+    return false;
+});
+
+function calculateRepeats(arr) {
+    var seen = {};
+    var len = arr.length;
+    var result = {};
+
+    for (var i = 0; i < len; i++) {
+        var item = arr[i];
+        if (seen[item] !== 1) {
+            seen[item] = 1;
+            result[item] = 1;
+        } else {
+            result[item]++;
+        }
+    }
+
+    return result;
+}
+
+function removeDuplicates(arr) {
+    var seen = {};
+    var out = [];
+    var len = arr.length;
+    var j = 0;
+
+    convertLowerCase = $('.option-convert-lower-case').is(':checked');
+
+    for (var i = 0; i < len; i++) {
+        var item = arr[i];
+        if (convertLowerCase) {
+            item = item.toLowerCase();
+        }
+
+        item = item.trim();
+        if (seen[item] !== 1) {
+            seen[item] = 1;
+            out[j++] = item;
+        }
+    }
+
+    return out;
+}
+
+function removeEmptyValues(arr) {
+    var out = [];
+    var j = 0;
+    var newValue = '';
+
+    if (!arr) {
+        return out;
+    }
+
+    for (var i = 0; i < arr.length; i++) {
+        if (arr[i]) {
+            newValue = arr[i].trim();
+            if (newValue !== '') {
+                out[j++] = newValue;
+            }
+        }
+    }
+
+    return out;
+}
+
+$(".i-checks").iCheck({
+    checkboxClass: "icheckbox_square-green",
+    radioClass: "iradio_square-green"
+});
+
+$(document).on('ifChecked', 'input.option-remove-non-word-chars', function (event) {
+    console.log(event);
+    $('input.option-protected-characters').removeClass('locked');
+});
+
+$(document).on('ifUnchecked', 'input.option-remove-non-word-chars', function (event) {
+    console.log(event);
+    $('input.option-protected-characters').addClass('locked');
+});
+
+function calculateTotalWords() {
+    var initialKeywordsCount = removeEmptyValues($('.initial-keywords-field').val().trim().split(/\s/g)).length;
+
+    var resultKeywords = '';
+    var resultCharacters = '';
+
+    var spliter = '';
+
+    if (parseInt($('.option-result-separator :checked:first').val()) == 1) {
+        spliter = /,/g;
+    } else {
+        spliter = /\s/g;
+    }
+
+    if ($('.option-word-frequency-count').is(':checked')) {
+        resultKeywords = $('.processor-result').val().trim().replace(/(?:\(\d+\)(\n|\r|))/g, "").split(spliter);
+        resultCharacters = $('.processor-result').val().replace(/(?:\s\(\d+\)(\n|\r|))/g, "").replace(/(\r\n|\n|\r)/gm, "");
+    } else {
+        resultKeywords = $('.processor-result').val().trim().split(spliter);
+        resultCharacters = $('.processor-result').val().replace(/(\r\n|\n|\r)/gm, "");
+    }
+
+    var resultKeywordsCount = removeEmptyValues(resultKeywords).length;
+    var resultCharactersCount = resultCharacters.length;
+    var initialCharactersCount = $('.initial-keywords-field').val().replace(/(\r\n|\n|\r)/gm, "").length;
+
+    $('.keyword-source .total-characters').text(initialCharactersCount);
+    $('.keyword-results .total-characters').text(resultCharactersCount);
+    $('.keyword-results .total-words').text(resultKeywordsCount);
+    $('.keyword-source .total-words').text(initialKeywordsCount);
+
+    if ($('.option-maintain-phrases').is(':checked')) {
+        var initialKeywordsText = $('.initial-keywords-field').val()
+        var separator = /,|;|\n/g.test(initialKeywordsText) ? /,|;|\n/g : /\s/;
+        var initialPhrasesCount = removeEmptyValues(initialKeywordsText.split(separator)).length;
+
+        $('.keyword-source .total-phrases').text(initialPhrasesCount);
+        $('.keyword-source .total-phrases, .keyword-source .total-phrases-label').show();
+    } else {
+        $('.keyword-source .total-phrases').text('-');
+        $('.keyword-source .total-phrases, .keyword-source .total-phrases-label').hide();
+    }
+}
+
+setInterval(calculateTotalWords, 1000);
+
+$(document).on('click', '.action-prepare-remove-asins', function (e) {
+    var initialKeywordsText = $('.initial-keywords-field').val().toLowerCase();
+    var regexp = /B\d{2}\w{7}|\d{9}(X|\d)/gim;
+    var match;
+    var asins = [];
+
+    while (match = regexp.exec(initialKeywordsText)) {
+        asins.push(match[0]);
+    }
+
+    if (asins.length == 0) {
+        swal("", "No ASINS found.", "success");
+
+        return;
+    }
+
+    var checkboxes = '<div class="row">';
+    asins = asins.filter(function (item, i, arr) {
+        return arr.indexOf(item) === i;
+    });
+
+    asins.forEach(function (value) {
+        checkboxes += '<div class="col-md-4"><div class="checkbox"><label><input type="checkbox" class="i-checks" checked>'
+            + value.toUpperCase()
+            + '</label></div></div>';
+    });
+    checkboxes += '</div>';
+
+    var count = asins.length;
+    count += asins.length == 1 ? ' ASIN' : ' ASINS';
+
+    $('#remove-asins-modal').find('.asins-checkboxes').html(checkboxes);
+    $('#remove-asins-modal').find('.asins-count').text(count);
+    $(".i-checks").iCheck({
+        checkboxClass: "icheckbox_square-green",
+        radioClass: "iradio_square-green"
+    });
+
+    $('#remove-asins-modal').modal('show');
+});
+
+$(document).on('hidden.bs.modal', '#remove-asins-modal', function (e) {
+    $('#remove-asins-modal').find('.asins-checkboxes').html('');
+    $('#remove-asins-modal').find('.asins-count').text('');
+});
+
+$(document).on('click', '.action-remove-asins', function (e) {
+    var initialKeywordsText = $('.initial-keywords-field').val();
+    var asin;
+    var count = 0;
+
+    $('#remove-asins-modal').find('.icheckbox_square-green.checked').each(function () {
+        asin = $(this).parents('label').text();
+        console.log(asin);
+        initialKeywordsText = initialKeywordsText.replace(new RegExp(asin, 'gim'), '');
+        count++;
+    });
+
+    $('.initial-keywords-field').val(initialKeywordsText.trim());
+
+    if (count > 0) {
+        $('#remove-asins-modal').modal('hide');
+        count += count == 1 ? ' ASIN' : ' ASINS';
+        swal("", count + " removed.", "success");
+    } else {
+        swal("", "No ASIN is selected", "error");
+    }
+});
+
+$(document).on('ifChanged', '.option-append-word', function(e) {
+    if(e.currentTarget.checked) {
+        $('.option-append-to-end, .option-append-to-start').iCheck('enable');
+    } else {
+        $('.option-append-to-end, .option-append-to-start').iCheck('disable');
+    }
+    $('.option-append-word-value').toggleClass('locked', !e.currentTarget.checked).blur();
+})
+
+var appendToggleLock = false;
+
+$(document).on('ifChanged', '.option-append-to-end', function(e) {
+    if(appendToggleLock) {
+        return;
+    }
+
+    appendToggleLock = true;
+    if(e.currentTarget.checked) {
+        $('.option-append-to-start').iCheck('uncheck');
+    } else {
+        $('.option-append-to-start').iCheck('check');
+    }
+    appendToggleLock = false;
+});
+
+$(document).on('ifChanged', '.option-append-to-start', function(e) {
+    if(appendToggleLock) {
+        return;
+    }
+
+    appendToggleLock = true;
+    if(e.currentTarget.checked) {
+        $('.option-append-to-end').iCheck('uncheck');
+    } else {
+        $('.option-append-to-end').iCheck('check');
+    }
+    appendToggleLock = false;
+});
+
+$('.processor-result-numbers').scroll(function(event){
+
+    var top = $('.processor-result').scrollTop();
+    $('.processor-result-numbers').scrollTop(top);
+});
+
+$('.processor-result').scroll(function(event){
+    var ele = $(event.currentTarget);
+    var top = ele.scrollTop();
+
+    $('.processor-result-numbers').scrollTop(top);
+});
+
+$('.processor-result').change(function() {
+    var newVal = $('.processor-result').val().trim();
+    $('.action-result-copy').attr("data-clipboard-text", newVal);
+});
+
+$(document).on('click', '.action-export-scribbles2', function(){
+
+    var keywordList = $('.keyword-results .processor-result').val();
+    if (!keywordList) {
+        return false;
+    }
+
+    var blankPage = window.open('', '_blank');
+
+    $.ajax({
+        url: $(this).data('url'),
+        method: 'POST',
+        data: {
+            keywordList: keywordList,
+        },
+        success: function(response) {
+            if (response.status == 'success') {
+                setTimeout(function(){
+                    blankPage.location.href = '/scribbles';
+                }, 200);
+            } else {
+                console.log(response.errMsg);
+            }
+        },
+        error: function(response) {
+            console.log('export.ajax.error: ');
+        }
+    });
+});

@@ -1,0 +1,237 @@
+#notification-dropdown.dropdown-menu.open {
+    display: block;
+}
+#notification-btn {
+    outline: none;
+}
+
+#notification-btn,
+.notification-dropdown-wrapper {
+    height: 37px;
+}
+
+#notification-dropdown li a:hover {
+    color: inherit !important;
+}
+#notification-dropdown li:hover {
+}
+
+#notification-btn .badge {
+    position: absolute;
+    top: auto;
+    margin: -10px 0px 0px -9px;
+}
+#notification-btn span {
+    width: 18px;
+    padding: 3px 0 0 0px;
+    height: 18px;
+}
+.short-bell .badge {
+    position: absolute;
+    top: auto;
+    margin: -10px 0px 0px -9px;
+}
+
+#notification-dropdown {
+    max-width: 360px;
+    min-width: 180px;
+}
+#notification-dropdown li a {
+    word-break: break-word;
+    white-space: normal;
+    text-align: center;
+}
+
+.chat-popup {
+    min-width: 470px;
+    max-width: 470px;
+    min-height: 398px;
+    max-height: 500px;
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 2px #ddd;
+    z-index: 1200;
+    background: white;
+    top: 63px;
+    position: absolute;
+    display: none;
+}
+.chat-popup .notify-list-body {
+    overflow-y: auto;
+    min-height: 300px;
+    max-height: 400px;
+}
+
+.chat-popup .empty {
+    margin: 105px 0 0 0;
+    background: url(/images/notifications/bell.png) 50% 0 no-repeat;
+    background-size: 96px 96px;
+    text-align: center;
+    font-size: 16px;
+    padding: 122px 0 0 0;
+    color: #000;
+}
+.chat-popup .notifications {
+}
+.chat-popup .notifications .title {
+    font-size: 16px;
+    color: #000;
+    line-height: 41px;
+    padding: 0 19px;
+    border-bottom: 1px solid #ebebeb;
+}
+.chat-popup .notifications .tit {
+    font-size: 12px;
+    color: #999;
+    line-height: 29px;
+    border-bottom: 1px solid #ebebeb;
+    padding: 0 0 0 19px;
+}
+.chat-popup .notifications ul {
+    padding: 0;
+    list-style: none;
+    margin: 0;
+}
+.chat-popup .unread {
+    background: #f1f3f6 !important;
+    opacity: 1 !important;
+    /*font-style: italic;*/
+}
+.chat-popup .notifications li {
+    padding: 0 29px 10px 69px;
+    position: relative;
+    border-bottom: 1px solid #ebebeb;
+    min-height: 66px;
+    background: #fefefe;
+    opacity: 0.85;
+}
+.chat-popup .notifications li:hover {
+    background: #fafafa;
+    opacity: 1;
+}
+.chat-popup .notifications .btn-1 {
+    position: absolute;
+    z-index: 10;
+    right: 8.5px;
+    top: 42px;
+    color: #647687;
+    font-size: 12px;
+    opacity: 0;
+    cursor: pointer;
+}
+.chat-popup .notifications .close {
+    position: absolute;
+    font-size: 16px;
+    color: #647687;
+    top: 19px;
+    right: 8px;
+    z-index: 10;
+    opacity: 0;
+}
+.chat-popup .notifications .close:hover {
+    color: red;
+    opacity: 1;
+}
+
+.chat-popup i.mark-seen:hover {
+    color: orange;
+}
+.chat-popup .notifications .user-avatar {
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    left: 19px;
+    top: 14px;
+}
+.chat-popup .notifications .user-avatar img {
+    max-width: 100%;
+    /*border-radius: 50%;*/
+}
+.chat-popup .notifications .data {
+}
+.chat-popup .notifications .data .text {
+    font-size: 11px;
+    /*color: #000;*/
+    line-height: 16px;
+    padding: 12px 0 4px 0;
+}
+.chat-popup .notifications .data .date {
+    font-size: 12px;
+}
+.chat-popup .notifications .data .date .notification-type {
+    display: inline-block;
+    font-size: 10px;
+    /*color: #000;*/
+    margin: 0 0 0 7px;
+    vertical-align: top;
+}
+.chat-popup .notifications .notification-type i.fa-circle{
+    vertical-align: top;
+    margin-top: 4px;
+    font-size: 10px;
+}
+.chat-popup .notifications .data .date .notification-type span {
+    opacity: 1;
+    display: inline-block;
+    margin-left: 2px;
+}
+.chat-popup .notifications li:hover .data .date .notification-type span {
+    opacity: 1;
+}
+.chat-popup .notifications li:hover .close,
+.chat-popup .notifications li:hover .mark-seen {
+    opacity: 1;
+}
+.chat-popup .notifications .data .date .notification-type i.fa-circle {
+    font-size: 7px;
+}
+.chat-popup .notifications .data .date .notification-type.info i.fa-circle {
+    color: #0050ef;
+}
+.chat-popup .notifications .data .date .notification-type.warning i.fa-circle {
+    color: #fa6800;
+}
+.chat-popup .notifications .data .date .notification-type.error i.fa-circle {
+    color: #e51400;
+}
+.chat-popup .notifications .data .date .notification-type.success i.fa-circle {
+    color: #60a917;
+}
+
+#notify-panel-overlay {
+    z-index: 490;
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    opacity: 0;
+}
+
+.load-more {
+    text-align: center;
+}
+
+.act-delete-all {
+    float: right !important;
+    margin-top: 11px;
+    padding: 1px 3px 1px 3px !important;
+    border-radius: 5px !important;
+    background: #647687;
+    color: white;
+}
+
+.act-delete-all:hover {
+    cursor: pointer;
+    color: black;
+}
+
+.follow-link {
+    padding-top: 1.5px;
+    padding-left: 4px;
+    font-size: 13px;
+}
+
+.follow-link:hover {
+    color: #2a8ed5;
+}

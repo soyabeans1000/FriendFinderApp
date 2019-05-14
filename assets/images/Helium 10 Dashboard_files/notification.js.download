@@ -1,0 +1,436 @@
+function Notifications(config) {
+
+    var self = this;
+
+    var defaultConfig = {
+        websocket: {
+            url: 'http://localhost:8890',
+            channelId: 'default',
+        },
+        notifications: [],
+        showMessageLimit: 10,
+        dataLoadType: {
+            default: 1,
+            current: 2,
+            additional: 3
+        },
+        urls: {
+            getNew: undefined,
+            getUnreadCount: undefined,
+            setSeen: undefined,
+            delete: undefined,
+            deleteAll: undefined
+        },
+        tooltipsConfig: {
+            theme: 'tooltipster-borderless',
+            side: ['right', 'left', 'bottom', 'top'],
+            trigger: 'hover'
+        },
+        tooltipsTypeConfig: {
+            theme: 'tooltipster-borderless',
+            side: 'left',
+            trigger: 'hover'
+        }
+    }
+
+    this.config = $.extend(defaultConfig, config || {});
+
+    var init = function() {
+        var overlay = $.templates('#not-panel-overlay').render();
+        $('body').append(overlay);
+
+        localStorage.setItem('notifications.currentDataIdx', self.config.showMessageLimit);
+
+        var websocket = new WebSocketProxy(self.config.websocket);
+        $(websocket).on("notification.websocketproxy", function(event) {
+            addNewNotify(event.body);
+            represent();
+            animate();
+        });
+
+        forceUpdate();
+        represent();
+    }
+
+    var animate = function(animation) {
+        if(!animation) {
+            animation = 'animated tada';
+        } else {
+            animation += ' animated';
+        }
+
+        $('#notification-btn i').addClass(animation)
+            .one('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function() {
+                $(this).removeClass(animation);
+            });
+
+        $('#sb-notification-btn i').addClass(animation)
+            .one('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function() {
+                $(this).removeClass(animation);
+            });
+    }
+
+    var loading = false;
+    var forceUpdate = function(loadPoint) {
+        loading = true;
+        $.ajax({
+            url: self.config.urls.getNew,
+            data: {
+                point: loadPoint
+            },
+            success: function(response) {
+                if (loadPoint) {
+                    addNotify(response.data);
+                } else {
+                    rewriteNotify(response.data);
+                }
+                represent();
+            },
+            error: function(response) {
+                console.log('error during notification update');
+            },
+            complete: function() {
+                loading = false;
+            }
+        });
+    }
+
+    var rewriteNotify = function(data) {
+        localStorage.setItem('notifications', JSON.stringify(data));
+        localStorage.setItem('notifications.lastSeenUpdate', Date.now());
+    }
+
+    var addNotify = function(data) {
+        var storage = JSON.parse(localStorage.getItem('notifications'));
+        Array.prototype.push.apply(storage, data);
+        localStorage.setItem('notifications', JSON.stringify(storage));
+        localStorage.setItem('notifications.lastSeenUpdate', Date.now());
+    }
+
+    var addNewNotify = function(data) {
+        var storage = JSON.parse(localStorage.getItem('notifications'));
+        storage.unshift(data);
+        localStorage.setItem('notifications', JSON.stringify(storage));
+        localStorage.setItem('notifications.lastSeenUpdate', Date.now());
+
+        newNotifyAddTooltips($('#notification-panel li:first'));
+    }
+
+    var newNotifyAddTooltips = function(item) {
+        if (!item) {
+            return;
+        }
+
+        item.find('.notification-type .fa-circle').tooltipster(self.config.tooltipsConfig);
+        item.find('.delete-notify').tooltipster(self.config.tooltipsConfig);
+        item.find('.follow-link').tooltipster(self.config.tooltipsConfig);
+        item.find('.mark-seen').tooltipster(self.config.tooltipsConfig);
+    }
+
+    var represent = function () {
+        var data = JSON.parse(localStorage.getItem('notifications'));
+        if(data !== null){
+            rendering(data);
+        }
+        updateBadge();
+    }
+
+    var rendering = function (data) {
+        var liTemplate = $.templates('#notification-li-template');
+        var earlyNotifyList = '';
+        var olderNotifyList = '';
+        var twoDays = 86400 * 2 * 1000;
+        var nowDate = new Date();
+
+        var typeList = [
+            'info',
+            'warning',
+            'error',
+            'success'
+        ];
+        Object.keys(data).forEach(function(key,index) {
+            if(data[key]) {
+                var strType  = typeList[data[key].type];
+                data[key].type = strType;
+
+                if (!data[key].seen) {
+                    data[key].liClass = 'unread';
+                }
+                data[key].avatarSrc = '/images/helium-apple-logo.png';
+                var notifyDate = new Date((data[key].createdAt * 1000) + twoDays);
+
+                if (notifyDate > nowDate) {
+                    earlyNotifyList += liTemplate.render(data[key]);
+                } else {
+                    olderNotifyList += liTemplate.render(data[key]);
+                }
+            }
+        });
+
+        if (earlyNotifyList || olderNotifyList) {
+            $('#notification-panel').remove('.empty');
+            var notifyContainer = $('#notification-panel div.notifications:first');
+
+            if (notifyContainer.length) {
+                $('#early-list').html(earlyNotifyList);
+                $('#older-list').html(olderNotifyList);
+            } else {
+                var ulTemplate = $.templates('#notification-ul-template').render();
+                $('#notification-panel').html(ulTemplate);
+                $('#notification-panel .act-delete-all:first').tooltipster(self.config.tooltipsConfig);
+
+                $('#early-list').html(earlyNotifyList);
+                $('#older-list').html(olderNotifyList);
+            }
+
+            addTooltips();
+        } else {
+            var notifyEmptyTemplate = $.templates('#notification-empty-template').render();
+            $('#notification-panel').html(notifyEmptyTemplate);
+        }
+
+        setTimeout(function(){
+            $('#load-more-spinner').remove();
+        }, 1000);
+    }
+
+    var addTooltips = function() {
+        var panel = $('#notification-panel');
+        panel.find('.mark-seen').tooltipster(self.config.tooltipsConfig);
+        panel.find('.follow-link').tooltipster(self.config.tooltipsConfig);
+        panel.find('.delete-notify').tooltipster(self.config.tooltipsConfig);
+        panel.find('.notification-type .fa-circle').tooltipster(self.config.tooltipsTypeConfig);
+    }
+
+    var updateBadge = function(notSeenCount) {
+
+        if (isNumeric(notSeenCount)) {
+            renderBadge(notSeenCount);
+        } else {
+            $.ajax({
+                url: self.config.urls.getUnreadCount,
+                method: "get",
+                success: function(response) {
+                    renderBadge(response.unreadCount);
+                },
+                error: function(response) {
+                    console.log('cant get unreadCount');
+                }
+            });
+        }
+    }
+
+    var renderBadge = function(count) {
+        if(count > 0) {
+            $('#notification-btn .badge').html(count).removeClass('hidden');
+            $('.short-bell .badge').html(count).removeClass('hidden');
+        } else {
+            $('#notification-btn .badge').html(count).addClass('hidden');
+            $('.short-bell .badge').html(count).addClass('hidden');
+        }
+    }
+
+    var setSeen = function(id, seen) {
+        if (!id || seen === undefined || seen === null) {
+            return;
+        }
+
+        var storage = JSON.parse(localStorage.getItem('notifications') || '{}');
+        for (var i = 0; i < storage.length; ++i) {
+            if (storage[i].id == id) {
+                storage[i].seen = seen;
+                break;
+            }
+        }
+
+        rewriteNotify(storage);
+
+        var url = $('#notification-btn').data('url');
+        $.ajax({
+            url: self.config.urls.setSeen,
+            method: "POST",
+            data: {
+                id: id,
+                newStatus: seen
+            },
+            success: function() {
+                represent();
+            },
+        });
+    }
+
+    var deleteOne = function(id) {
+        var storage = JSON.parse(localStorage.getItem('notifications'));
+        Object.keys(storage).forEach(function(key,index) {
+            if (storage[key] && storage[key].id == id) {
+                storage.splice(key, 1);
+            }
+        });
+
+        rewriteNotify(storage);
+
+        $.ajax({
+            url: self.config.urls.delete,
+            method: "POST",
+            data: {
+                id: id
+            },
+            success: function() {
+                represent();
+            }
+        });
+    }
+
+    var deleteAll = function() {
+        loading = true;
+        $.ajax({
+            url: self.config.urls.deleteAll,
+            method: "POST",
+            success: function(response) {
+                if (response.status == 'success') {
+                    forceUpdate();
+                }
+            },
+            error: function(response) {
+                console.log(response);
+            },
+            complete: function() {
+                loading = false;
+            }
+        });
+    }
+
+    var loadAdditionalNotify = function() {
+        var notifyId = $('#notification-panel .notify-list-body li:last').data('id');
+
+        var spinner = '<i id="load-more-spinner" class="fa fa-spinner fa-spin" style="font-size:12px"></i>';
+        $('#notification-panel .title').prepend(spinner);
+
+        forceUpdate(notifyId);
+    }
+
+    /**
+     * When multiple tabs opened,
+     * Informing other tabs that some notification marked as seen
+     */
+    $(window).on('storage', function(event) {
+        switch(event.originalEvent.key) {
+            case 'notifications.lastSeenUpdate':
+                represent();
+            break;
+        }
+    });
+
+    var notifyPanelWidth = $('#notification-panel').width();
+    var bellWidth = $('.short-bell').width();
+    $(document).on('click', '#notification-btn, #sb-notification-btn', function() {
+
+        var panel = $('#notification-panel');
+        if (panel.css('display') == 'none') {
+            var btnPosLeft = $(this).position().left;
+            var left = btnPosLeft + bellWidth - notifyPanelWidth + 15;
+            panel.css('left', left);
+
+            showPanel();
+        } else {
+            hidePanel();
+        }
+    });
+
+    var showPanel = function () {
+        $('#notify-panel-overlay').show();
+        $('#notification-panel').show();
+    }
+
+    var hidePanel = function () {
+        $('#notify-panel-overlay').hide();
+        $('#notification-panel').hide();
+    }
+
+    $(document).ready(function() {
+
+        $(document).keyup(function(event) {
+            var panel = $('#notification-panel');
+            if (panel.css('display') == 'block') {
+                if (event.keyCode == 27) {
+                    hidePanel();
+                }
+            }
+        });
+
+        $(document).on('click', '#notify-panel-overlay', function() {
+            hidePanel();
+        });
+
+        $(document).on('click', '.delete-notify', function() {
+            var item = $(this).parent();
+            var notifyId = item.data('id');
+
+            deleteOne(notifyId);
+        });
+
+        $(document).on('click', '.mark-seen', function() {
+            var parentLi = $(this).parent();
+            var notifyId = parentLi.data('id');
+            var newStatus = null;
+
+            if (parentLi.hasClass('unread')) {
+                newStatus = true;
+                parentLi.removeClass('unread');
+                $(parentLi).find('.mark-seen').tooltipster('content', 'Mark as unread');
+            } else {
+                newStatus = false;
+                parentLi.addClass('unread');
+                $(parentLi).find('.mark-seen').tooltipster('content', 'Mark as read');
+            }
+
+            setSeen(notifyId, newStatus);
+        });
+
+        $(document).on('click', '.act-load-more', function() {
+            loadAdditionalNotify();
+        });
+
+        $(document).on('click', '.act-delete-all', function(){
+            deleteAll();
+        });
+
+        var curScrollTop = 0;
+        $('#notification-panel .notify-list-body:first').scroll(function(e) {
+
+            // this case means user is scrolling down
+            // on user's scroll-up no need to load something
+            if (e.target.scrollTop > curScrollTop) {
+                if (isNotifyListScrolled() && !loading) {
+                    loadAdditionalNotify();
+                }
+            }
+
+            curScrollTop = e.target.scrollTop;
+        });
+    });
+
+
+    var isNotifyListScrolled = function() {
+
+        var buffer = 10;
+        var notifyBodyList = $('#notification-panel .notify-list-body:first');
+        var scrollPosition = notifyBodyList.prop('scrollHeight') - notifyBodyList.scrollTop();
+        var bottomLineHeight = notifyBodyList.height() + buffer;
+
+        if (scrollPosition <= bottomLineHeight) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function isNumeric(n) {
+      return !isNaN(parseFloat(n)) && isFinite(n);
+    }
+
+    init(this.config);
+    self.forceUpdate = forceUpdate;
+
+    return this;
+}
