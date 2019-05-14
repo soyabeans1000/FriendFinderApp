@@ -9,11 +9,61 @@ const getCompatibleUser = (x,y,z) => {
   .then(r => r.json())
   .then(friends =>  {
    
-    for (let i=0; i < friends.length; i++)
-    {console.log("Freinds score=>" + friends[i].scores)
-      console.log(z[i])
+    
+
+    let sum = 0
+
+    let bestMatch = friends[0]
+
+    let bestMatchDiff = 0
+
+    console.log('bestMath setting' + bestMatch)
+
+for (let i=0; i < friends.length-1; i++)
+    {
+      console.log('i=> ' + i)
+     
+      sum = 0
+
+      for (let j=0; j < friends[i].scores.length-1; j++)
+        {
+          console.log('j=> ' + j)
+          let friend_score = friends[i].scores[j]
+          let form_score = z[j]
+          let diff = Math.abs(friend_score - form_score)
+          //console.log('diff' + diff)
+          sum = sum + diff 
+          
+          
+
+
+
     }
-   showFriends(friends[0].name,friends[0].photo)
+
+    if (i === 0)
+      {
+        console.log('initial diff')
+        bestMatchDiff = sum
+      }
+
+    console.log('BEFPRE sum' + sum + 'bestMatchDiff=>' + bestMatchDiff)
+
+    if (sum < bestMatchDiff)
+    {
+      console.log('sinde if')
+      bestMatch = friends[i]
+      bestMatchDiff = sum
+    }
+
+    console.log('AFTER sum' + sum + 'bestMatchDiff=>' + bestMatchDiff)
+
+    console.log(bestMatch)
+
+    }
+
+
+
+   showFriends(bestMatch.name,bestMatch.photo)
   })
   
  }
@@ -37,11 +87,10 @@ document.querySelector('#submitBtn').addEventListener('click', e => {
   let i;
   for (i = 1; i <= numOfQuestions; i++) { 
    scores[i-1] = document.querySelector(`#q${i}`).value
-   console.log(document.querySelector(`#q${i}`).value)
-  }
+     }
 
   
-console.log(scores)
+//console.log(scores)
 
   fetch('/profile', {
     method: 'POST',
