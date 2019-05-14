@@ -33,7 +33,7 @@ for (let i=0; i < friends.length-1; i++)
         bestMatchDiff = sum
       }
 
-    console.log('BEFPRE sum' + sum + 'bestMatchDiff=>' + bestMatchDiff)
+    console.log('AFTER sum' + sum + 'bestMatchDiff=>' + bestMatchDiff)
     if (sum < bestMatchDiff)
     {
       console.log('sinde if')
