@@ -1,18 +1,10 @@
 const { fetch, alert } = window
 
-
-
-
 const getFriendsAPI = _ => {
   fetch('/friendsAPI')
     .then(r => r.json())
     .then(r => {
-
-      console.log(r)
-
-
-
-
+      //console.log(r)
       document.querySelector('#friendsList').innerHTML = ''
       r.forEach(({ name, photo, scores }) => {
         let friendDiv = document.createElement('div')
@@ -26,7 +18,6 @@ const getFriendsAPI = _ => {
     })
     .catch(e => console.error(e))
 }
-
 
 getFriendsAPI()
 
