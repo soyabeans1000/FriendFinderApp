@@ -21,6 +21,11 @@ body{
      background-position: left;
 }
 
+.form-title
+{
+    font-size:2em;
+    color: greenyellow;
+}
 
 .form-container
 {
