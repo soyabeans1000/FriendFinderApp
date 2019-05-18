@@ -19,16 +19,12 @@ module.exports = function (app) {
   //Route for POSTing profile
   app.post('/profile', function (req, res) {
     
-    friendsArray.push(req.body)
-    console.log(friendsArray)
+    //friendsArray.push(req.body)
+    //console.log(friendsArray)
     res.json(true)
   })
 
 
-  // app.get('/profile', function (req, res) {
-   
   
-  // })
-
 }
   

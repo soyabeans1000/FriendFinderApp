@@ -11,37 +11,41 @@ const getCompatibleUser = (x,y,z) => {
     let sum = 0
     let bestMatch = friends[0]
     let bestMatchDiff = 0
-    console.log('bestMath setting' + bestMatch)
+    let noOfFriends = friends.length
 
-for (let i=0; i < friends.length-1; i++)
+for (let i=0; i < noOfFriends; i++)
     {
-      console.log('i=> ' + i)
       sum = 0
-      for (let j=0; j < friends[i].scores.length-1; j++)
+      
+      for (let j=0; j < friends[i].scores.length; j++)
         {
-          console.log('j=> ' + j)
+         
           let friend_score = friends[i].scores[j]
           let form_score = z[j]
+            
+
           let diff = Math.abs(friend_score - form_score)
-          //console.log('diff' + diff)
+         
           sum = sum + diff 
     }
 
+
     if (i === 0)
       {
-        console.log('initial diff')
+        
         bestMatchDiff = sum
       }
+   
 
-    console.log('AFTER sum' + sum + 'bestMatchDiff=>' + bestMatchDiff)
+    
     if (sum < bestMatchDiff)
     {
-      console.log('sinde if')
+      
       bestMatch = friends[i]
       bestMatchDiff = sum
     }
-    console.log('AFTER sum' + sum + 'bestMatchDiff=>' + bestMatchDiff)
-    console.log(bestMatch)
+    
+   
     }
 
    showFriends(bestMatch.name,bestMatch.photo)
@@ -54,6 +58,7 @@ for (let i=0; i < friends.length-1; i++)
     document.querySelector('#friendsList').innerHTML = x
     let photoDiv = document.createElement('img')
     photoDiv.src = y
+    document.querySelector('#friendsList').append(document.createElement('br'))
     document.querySelector('#friendsList').append(photoDiv)
   }
 
@@ -80,7 +85,7 @@ document.querySelector('#submitBtn').addEventListener('click', e => {
     })
   })
     .then(r => {
-      console.log(r)
+      
       getCompatibleUser(document.querySelector('#name').value,document.querySelector('#photo').value,scores)
       })
     .catch(e => console.error(e))
