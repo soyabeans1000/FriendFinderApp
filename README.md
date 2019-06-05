@@ -5,5 +5,7 @@ This is a full-stack site will take in results from your users' surveys, then co
 
 ### See Live Demo: https://rocky-spire-26772.herokuapp.com/
 
-##Some ScreenShots
-<img src = "friendfinder.jpg">
+## Some ScreenShots
+<img src = "friendfinder.jpg"><br>
+<img src = "friendfinder2.jpg">
+
